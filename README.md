@@ -1,11 +1,16 @@
 # Customer-aware shopping assistant (prototype)
 
 The prototype from the workshop case study on the Agentic Commerce Consultant application
-(Accenture Song). One screen, one shopper question, two AI assistants side by side:
+(Accenture Song). One screen, two AI shopping assistants, each in its own chat. Both get
+the same opening message, then you reply to each as the shopper:
 
-- **Catalogue only**: answers from the product catalogue, like most shopping agents today.
-- **Knows the customer**: same question, plus the shopper's Klaviyo-style profile and event
-  history. Shows "why" chips naming the customer facts it used.
+- **Catalogue only**: knows nothing about the shopper, so like a good sales assistant it
+  asks first (dress code, size, budget, fit) before recommending.
+- **Knows the customer**: also has the shopper's Klaviyo-style profile and history. It
+  opens by saying it will look at their past orders, skips what it already knows, and
+  asks only what the data can't answer. "Why" chips show the customer facts it used.
+
+A counter on each side shows how many questions it had to ask.
 
 The retailer, **Ondine & Vale**, is fictional. All products and customers are synthetic.
 
@@ -24,8 +29,8 @@ It needs an Anthropic API key. Put it in `.env.local` (git-ignored):
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Every Ask makes two parallel calls to Claude (`claude-opus-5-5`, low effort, structured
-JSON output) and takes about 8 seconds. Without a key, the page shows an error.
+Each message is one call to Claude (`claude-opus-5-5`, low effort, structured JSON output)
+and takes about 5 to 10 seconds. Without a key, the page shows an error.
 
 ## How it works
 
@@ -37,12 +42,13 @@ JSON output) and takes about 8 seconds. Without a key, the page shows an error.
 - `lib/data.ts`: filters the catalogue by category from keywords in the question before
   anything is sent to the model (a wedding question sends dresses, jumpsuits, skirts,
   shoes, accessories and outerwear).
-- `lib/assistant.ts`: the two prompts and the Claude call. The model returns
-  `{ recommendation, products: [ids], facts_used: [strings] }`. Product ids not in the
+- `lib/assistant.ts`: the two prompts and the Claude call. Each turn the model returns
+  `{ kind: question | recommendation, message, products: [ids], facts_used: [strings] }`. Product ids not in the
   catalogue are dropped. Server-side refusal fallback (`fallbacks: "default"`) is on.
-- `app/api/recommend/route.ts`: one route, two calls in parallel. With the anonymous
-  visitor or consent off, the right panel reuses the catalogue-only answer and says why.
-- `app/page.tsx`: the single screen. Changing the shopper or consent re-runs the question.
+- `app/api/chat/route.ts`: one route, called once per message per side. With the
+  anonymous visitor or consent off, the right side gets no customer data and says why.
+- `app/page.tsx`: the single screen. Nothing runs until you press Ask both. Changing the
+  shopper or consent clears both chats.
 
 No database, no vector store.
 
@@ -54,23 +60,21 @@ No database, no vector store.
 | Charlotte | Loyal high spender | Gold tier, £255 average order, buys new arrivals, clicked the Aurelia in the "New In: Occasion" email. Gets premium new-in pieces. |
 | Jess | Lapsed, sale-only buyer | Size 14. Last order January 2026, every order discounted, clicks sale emails, just viewed a sale dress. Gets sale pieces with the was/now price. |
 
-## Demo script (30 to 45 seconds)
+## Demo script (45 to 60 seconds)
 
 Answers are generated live, so the wording changes each run. Rehearse once first.
 
-1. **(0 to 8s)** Start on **Anonymous visitor** and ask the default question, *"I need
-   something to wear to a wedding in June"*. "This is what shopping agents do today. Both
-   sides give the same catalogue answer."
-2. **(8 to 22s)** Click **Priya**. Point at the profile strip: three dresses returned as
-   "Too short", she's 5'10". Then the right panel: "The assistant that knows her goes
-   straight to Tall and maxi lengths in her size." Point at the **why chips**. "The left
-   side has no idea any of that matters."
-3. **(22 to 32s)** Click **Charlotte**, then **Jess**. "Same question. A Gold-tier customer
-   gets the new-in silk dress she clicked in last week's email. A lapsed, sale-only
-   customer gets the sale dress she just looked at, with the was/now price."
-4. **(32 to 42s)** Turn **Personalisation consent** off. "No consent, no customer data. It
-   falls back to the catalogue answer and says so." Close: "The brand already holds this
-   data. It just isn't reaching the agent."
+1. **Pick Priya** and point at the profile strip: three dresses returned as "Too short",
+   she's 5'10".
+2. **Press Ask both** with *"I need something to wear to a wedding in June"*.
+   - Left: "It doesn't know her, so it asks her size."
+   - Right: "It says it's checking her past orders, already knows length matters, and
+     only asks the dress code." Point at the why chips.
+3. **Reply on the right**: *"Daytime garden wedding, smart but not black tie"*. It
+   recommends Tall and maxi lengths in her size straight away.
+4. **Point at the counters.** "The left side still needs her size, budget and fit, which
+   the brand already knew."
+5. **Close**: turn consent off. "No consent, no customer data: it's back to asking."
 
 ## Deploy to Vercel
 

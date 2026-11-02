@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RETAILER, customers, productById, type Customer, type Product } from "@/lib/data";
 
-type Answer = { recommendation: string; products: string[]; facts_used: string[] };
-type Result = { catalogueOnly: Answer; knowsCustomer: Answer; fallbackReason: "anonymous" | "no-consent" | null };
+type Turn = { kind: "question" | "recommendation"; message: string; products: string[]; facts_used: string[] };
+type Msg = { role: "user"; content: string } | { role: "assistant"; turn: Turn };
+type Side = "catalogue" | "customer";
+type Chat = { messages: Msg[]; loading: boolean; error?: string };
 
-const DEFAULT_QUESTION = "I need something to wear to a wedding in June";
+const OPENER = "I need something to wear to a wedding in June";
+const EMPTY: Chat = { messages: [], loading: false };
 
 const SWATCH: Record<string, string> = {
   champagne: "#e8d6b0", emerald: "#1f6b4f", sage: "#a9b89a", "dusty pink": "#d9a9a6", "cornflower blue": "#6f8fd8",
@@ -23,6 +26,20 @@ function textOn(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   const lum = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
   return lum > 150 ? "#000" : "#fff";
+}
+
+// What the model sees of its own earlier turns: the text, plus which products it showed.
+function toApi(messages: Msg[]) {
+  return messages.map((m) =>
+    m.role === "user"
+      ? m
+      : {
+          role: "assistant" as const,
+          content: m.turn.products.length
+            ? `${m.turn.message}\n[Showed: ${m.turn.products.map((id) => productById.get(id)?.name).join(", ")}]`
+            : m.turn.message,
+        },
+  );
 }
 
 function ProductCard({ p }: { p: Product }) {
@@ -70,27 +87,59 @@ function ProfileStrip({ c }: { c: Customer }) {
   );
 }
 
-function Panel({ title, sub, answer, aware, notice, loading, error }: {
-  title: string; sub: string; answer?: Answer; aware?: boolean; notice?: string | null; loading: boolean; error?: string;
+function ChatPanel({ side, title, sub, chat, notice, onSend }: {
+  side: Side; title: string; sub: string; chat: Chat; notice?: string | null; onSend: (text: string) => void;
 }) {
+  const [draft, setDraft] = useState("");
+  const end = useRef<HTMLDivElement>(null);
+  const questions = chat.messages.filter((m) => m.role === "assistant" && m.turn.kind === "question").length;
+  const started = chat.messages.length > 0;
+
+  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [chat.messages.length, chat.loading]);
+
   return (
-    <section className={`panel${aware ? " aware" : ""}`}>
-      <p className="eyebrow"><span className="gt">&gt;</span> {aware ? "Knows the customer" : "Catalogue only"}</p>
-      <h2>{title}</h2>
-      <p className="sub">{sub}</p>
-      {loading ? <p className="loading">Thinking</p>
-        : error ? <p className="error">{error}</p>
-        : !answer ? <p className="placeholder">Ask a question to compare.</p>
-        : <>
-            {notice && <p className="notice">{notice}</p>}
-            <p className="reply">{answer.recommendation}</p>
-            {aware && answer.facts_used.length > 0 && (
-              <div className="chips" aria-label="Why">{answer.facts_used.map((f) => <span className="chip" key={f}>{f}</span>)}</div>
-            )}
-            <div className="cards">
-              {answer.products.map((id) => productById.get(id)).filter(Boolean).map((p) => <ProductCard key={p!.id} p={p!} />)}
+    <section className={`panel${side === "customer" ? " aware" : ""}`}>
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow"><span className="gt">&gt;</span> {side === "customer" ? "Knows the customer" : "Catalogue only"}</p>
+          <h2>{title}</h2>
+          <p className="sub">{sub}</p>
+        </div>
+        <div className="counter"><b>{questions}</b>questions asked</div>
+      </div>
+
+      {notice && <p className="notice">{notice}</p>}
+
+      <div className="thread">
+        {!started && <p className="placeholder">Start the conversation above.</p>}
+        {chat.messages.map((m, i) =>
+          m.role === "user" ? (
+            <div key={i} className="msg user">{m.content}</div>
+          ) : (
+            <div key={i} className="msg bot">
+              <p>{m.turn.message}</p>
+              {m.turn.facts_used.length > 0 && (
+                <div className="chips" aria-label="Why">{m.turn.facts_used.map((f) => <span className="chip" key={f}>{f}</span>)}</div>
+              )}
+              {m.turn.products.length > 0 && (
+                <div className="cards">
+                  {m.turn.products.map((id) => productById.get(id)).filter(Boolean).map((p) => <ProductCard key={p!.id} p={p!} />)}
+                </div>
+              )}
             </div>
-          </>}
+          ),
+        )}
+        {chat.loading && <p className="loading">Thinking</p>}
+        {chat.error && <p className="error">{chat.error}</p>}
+        <div ref={end} />
+      </div>
+
+      {started && (
+        <form className="reply" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { onSend(draft.trim()); setDraft(""); } }}>
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Reply as the shopper" aria-label={`Reply to the ${side} assistant`} disabled={chat.loading} />
+          <button disabled={chat.loading || !draft.trim()}>Send <span aria-hidden>&gt;</span></button>
+        </form>
+      )}
     </section>
   );
 }
@@ -98,36 +147,44 @@ function Panel({ title, sub, answer, aware, notice, loading, error }: {
 export default function Home() {
   const [customerId, setCustomerId] = useState("priya");
   const [consent, setConsent] = useState(true);
-  const [question, setQuestion] = useState(DEFAULT_QUESTION);
-  const [result, setResult] = useState<Result>();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>();
+  const [opener, setOpener] = useState(OPENER);
+  const [chats, setChats] = useState<Record<Side, Chat>>({ catalogue: EMPTY, customer: EMPTY });
 
   const customer = customers.find((c) => c.id === customerId);
+  const personalised = Boolean(customer && consent);
 
-  async function run() {
-    setLoading(true);
-    setError(undefined);
+  // A different shopper or consent setting is a different conversation.
+  useEffect(() => { setChats({ catalogue: EMPTY, customer: EMPTY }); }, [customerId, consent]);
+
+  async function send(side: Side, history: Msg[]) {
+    setChats((c) => ({ ...c, [side]: { messages: history, loading: true } }));
     try {
-      const res = await fetch("/api/recommend", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, customerId, consent }) });
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: toApi(history), side, customerId, consent }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setResult(data);
+      setChats((c) => ({ ...c, [side]: { messages: [...history, { role: "assistant", turn: data }], loading: false } }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+      setChats((c) => ({ ...c, [side]: { messages: history, loading: false, error: e instanceof Error ? e.message : "Something went wrong." } }));
     }
   }
 
-  // Re-run when the customer or consent changes, so the comparison always matches the controls.
-  useEffect(() => { run(); }, [customerId, consent]); // eslint-disable-line react-hooks/exhaustive-deps
+  function start() {
+    const first: Msg[] = [{ role: "user", content: opener.trim() }];
+    send("catalogue", first);
+    send("customer", first);
+  }
 
-  const notice = result?.fallbackReason === "anonymous"
-    ? "Anonymous visitor: no customer profile, so this falls back to the catalogue-only answer."
-    : result?.fallbackReason === "no-consent"
-      ? "Personalisation consent is off, so the customer's data isn't used. Falling back to the catalogue-only answer."
+  const notice = !customer
+    ? "Anonymous visitor: no customer profile, so this assistant only has the catalogue."
+    : !consent
+      ? "Personalisation consent is off, so the customer's data isn't used. This assistant only has the catalogue."
       : null;
+
+  const busy = chats.catalogue.loading || chats.customer.loading;
 
   return (
     <>
@@ -159,17 +216,19 @@ export default function Home() {
 
         {customer && <ProfileStrip c={customer} />}
 
-        <form className="ask" onSubmit={(e) => { e.preventDefault(); run(); }}>
-          <input value={question} onChange={(e) => setQuestion(e.target.value)} aria-label="Shopper's question" />
-          <button disabled={loading}>Ask <span aria-hidden>&gt;</span></button>
+        <form className="ask" onSubmit={(e) => { e.preventDefault(); if (opener.trim()) start(); }}>
+          <input value={opener} onChange={(e) => setOpener(e.target.value)} aria-label="Shopper's first message" />
+          <button disabled={busy || !opener.trim()}>{chats.catalogue.messages.length ? "Start over" : "Ask both"} <span aria-hidden>&gt;</span></button>
         </form>
 
         <div className="panels">
-          <Panel title="What the agent sees" sub="Product catalogue only" answer={result?.catalogueOnly} loading={loading} error={error} />
-          <Panel
+          <ChatPanel side="catalogue" title="What the agent sees" sub="Product catalogue only" chat={chats.catalogue} onSend={(t) => send("catalogue", [...chats.catalogue.messages, { role: "user", content: t }])} />
+          <ChatPanel
+            side="customer"
             title="What a great assistant knows"
-            sub={customer ? `Catalogue + ${customer.profile.first_name}'s Klaviyo profile and history` : "Catalogue + customer profile"}
-            answer={result?.knowsCustomer} aware notice={notice} loading={loading} error={error}
+            sub={personalised ? `Catalogue + ${customer!.profile.first_name}'s Klaviyo profile and history` : "Catalogue + customer profile"}
+            chat={chats.customer} notice={notice}
+            onSend={(t) => send("customer", [...chats.customer.messages, { role: "user", content: t }])}
           />
         </div>
 

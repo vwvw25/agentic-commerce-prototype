@@ -67,7 +67,23 @@ main { max-width: 1320px; margin: 0 auto; padding: 32px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
 .chip { font-size: 13px; font-weight: 500; color: var(--lilac); background: rgba(161, 0, 255, .14); border: 1px solid var(--purple); padding: 5px 10px; }
 .chip::before { content: "> "; color: var(--purple); font-weight: 700; }
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: auto; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+
+/* Chat */
+.panel-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.counter { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.counter b { display: block; font-size: 40px; line-height: 1; font-weight: 700; color: var(--lilac); letter-spacing: -.03em; }
+.thread { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.msg { max-width: 92%; font-size: 15px; line-height: 22px; }
+.msg p { margin: 0; color: var(--body); }
+.msg.user { align-self: flex-end; background: var(--white); color: var(--black); padding: 10px 14px; }
+.msg.bot { align-self: flex-start; background: var(--raised-2); border-left: 3px solid var(--hair); padding: 12px 14px; }
+.aware .msg.bot { border-left-color: var(--purple); }
+.msg.bot .chips { margin: 10px 0 0; }
+.reply { display: flex; margin-top: 16px; }
+.reply input { flex: 1; min-width: 0; background: var(--raised-2); color: var(--white); border: 1px solid var(--hair); padding: 12px 14px; font-size: 15px; }
+.reply button { background: var(--purple); color: var(--white); border: 0; padding: 0 20px; font-weight: 600; cursor: pointer; }
+.reply button:disabled, .reply input:disabled { opacity: .5; cursor: default; }
 .card { background: var(--raised-2); border: 1px solid var(--hair); }
 .swatch { aspect-ratio: 4 / 3; display: flex; align-items: flex-end; padding: 8px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .card .info { padding: 10px 12px 12px; }
