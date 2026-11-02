@@ -18,19 +18,14 @@ cd ~/Projects/agentic-commerce-prototype && npm install && npm run dev
 
 Open http://localhost:3000.
 
-**Two modes**, shown in the top-right badge:
+It needs an Anthropic API key. Put it in `.env.local` (git-ignored):
 
-- **Scripted demo** (no `ANTHROPIC_API_KEY` set): fixed answers for the default wedding
-  question. No API calls, no cost, always the same. Other questions get the same answers.
-- **Live · Claude**: set the key and every Ask makes two parallel calls to Claude
-  (`claude-opus-5-5`, low effort, structured JSON output).
-
-```bash
-# Run from ~/Projects/agentic-commerce-prototype
-cd ~/Projects/agentic-commerce-prototype && cp .env.local.example .env.local
+```
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Then put your key in `.env.local` and restart `npm run dev`.
+Every Ask makes two parallel calls to Claude (`claude-opus-5-5`, low effort, structured
+JSON output) and takes about 8 seconds. Without a key, the page shows an error.
 
 ## How it works
 
@@ -61,28 +56,28 @@ No database, no vector store.
 
 ## Demo script (30 to 45 seconds)
 
-1. **(0 to 8s)** Start on **Anonymous visitor** with the default question, *"I need something to
-   wear to a wedding in June"*. "This is what shopping agents do today: both sides give
-   the same catalogue answer. A satin mini, a midi, sandals."
+Answers are generated live, so the wording changes each run. Rehearse once first.
+
+1. **(0 to 8s)** Start on **Anonymous visitor** and ask the default question, *"I need
+   something to wear to a wedding in June"*. "This is what shopping agents do today. Both
+   sides give the same catalogue answer."
 2. **(8 to 22s)** Click **Priya**. Point at the profile strip: three dresses returned as
-   "Too short", she's 5'10". Then point at the right panel: "The assistant that knows her
-   skips the minis and goes for Tall and maxi lengths in her size." Point at the **why
-   chips**. "The left side still recommends the satin mini she already sent back."
-3. **(22 to 32s)** Click **Jess**. "Lapsed nine months, only ever buys on sale. The
-   assistant leads with the dress she just viewed, now £69, with the was/now price."
+   "Too short", she's 5'10". Then the right panel: "The assistant that knows her goes
+   straight to Tall and maxi lengths in her size." Point at the **why chips**. "The left
+   side has no idea any of that matters."
+3. **(22 to 32s)** Click **Charlotte**, then **Jess**. "Same question. A Gold-tier customer
+   gets the new-in silk dress she clicked in last week's email. A lapsed, sale-only
+   customer gets the sale dress she just looked at, with the was/now price."
 4. **(32 to 42s)** Turn **Personalisation consent** off. "No consent, no customer data. It
    falls back to the catalogue answer and says so." Close: "The brand already holds this
    data. It just isn't reaching the agent."
 
-In live mode the wording changes on every run, so do a rehearsal run first.
-
 ## Deploy to Vercel
 
-Import the repo in Vercel. No settings beyond the defaults. To run live, add
-`ANTHROPIC_API_KEY` as an environment variable. Leave it unset to deploy the scripted demo.
+The repo is connected to a Vercel project, and every push to `main` redeploys it. Add
+`ANTHROPIC_API_KEY` in the project's environment variables (Production).
 
 **Cost and exposure:** live mode is a public page that spends your API credit on every
 Ask (two Claude Opus 5.5 calls, roughly 4 to 5 thousand input tokens each, so a few pence
-per Ask). For a link you share in an application, either deploy the scripted demo or set
-a monthly spend limit on the Anthropic Console before adding the key. The API route has
+per Ask). Keep the key in its own Anthropic workspace with a monthly spend limit. The API route has
 `maxDuration = 60`, within the Vercel Hobby limit.

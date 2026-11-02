@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ask, scripted } from "@/lib/assistant";
+import { ask } from "@/lib/assistant";
 import { catalogueFor, customers } from "@/lib/data";
 
 export const maxDuration = 60;
@@ -11,16 +11,16 @@ export async function POST(req: Request) {
   const customer = customers.find((c) => c.id === customerId);
   const personalised = Boolean(customer && consent);
   const fallbackReason = !customer ? "anonymous" : !consent ? "no-consent" : null;
-  const live = Boolean(process.env.ANTHROPIC_API_KEY);
+  if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: "ANTHROPIC_API_KEY is not set." }, { status: 500 });
 
   try {
     const catalogue = catalogueFor(question);
-    const [catalogueOnly, knowsCustomer] = live
-      ? await Promise.all([ask(question, catalogue), personalised ? ask(question, catalogue, customer) : null])
-      : [scripted(), personalised ? scripted(customer) : null];
+    const [catalogueOnly, knowsCustomer] = await Promise.all([
+      ask(question, catalogue),
+      personalised ? ask(question, catalogue, customer) : null,
+    ]);
 
     return NextResponse.json({
-      mode: live ? "live" : "scripted",
       catalogueOnly,
       // Without a customer or consent, the right panel falls back to the catalogue-only answer.
       knowsCustomer: knowsCustomer ?? catalogueOnly,

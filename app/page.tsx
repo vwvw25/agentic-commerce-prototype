@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { RETAILER, customers, productById, type Customer, type Product } from "@/lib/data";
 
 type Answer = { recommendation: string; products: string[]; facts_used: string[] };
-type Result = { mode: "live" | "scripted"; catalogueOnly: Answer; knowsCustomer: Answer; fallbackReason: "anonymous" | "no-consent" | null };
+type Result = { catalogueOnly: Answer; knowsCustomer: Answer; fallbackReason: "anonymous" | "no-consent" | null };
 
 const DEFAULT_QUESTION = "I need something to wear to a wedding in June";
 
@@ -133,7 +133,7 @@ export default function Home() {
     <>
       <header className="bar">
         <div className="brand"><span className="gt">&gt;</span> {RETAILER}<small>Customer-aware shopping assistant · prototype</small></div>
-        {result && <span className="mode">{result.mode === "live" ? "Live · Claude" : "Scripted demo · no API key"}</span>}
+        <span className="mode">Live · Claude</span>
       </header>
 
       <main>
