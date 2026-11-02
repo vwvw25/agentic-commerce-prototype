@@ -1,0 +1,78 @@
+[
+  {
+    "id": "priya",
+    "label": "Frequent returner for fit",
+    "profile": {
+      "first_name": "Priya",
+      "email": "priya.s@example.com",
+      "location": { "city": "Manchester", "country": "GB" },
+      "properties": {
+        "usual_size": "12",
+        "height": "5'10\"",
+        "customer_since": "2023-04-11",
+        "personalisation_consent": true
+      }
+    },
+    "events": [
+      { "metric": "Opened Email", "datetime": "2026-10-18T08:12:00Z", "properties": { "campaign": "The Occasionwear Edit" } },
+      { "metric": "Viewed Product", "datetime": "2026-10-20T19:41:00Z", "properties": { "product_id": "d03", "product_name": "Juniper Tiered Maxi Dress" } },
+      { "metric": "Placed Order", "datetime": "2026-08-15T12:03:00Z", "properties": { "order_id": "OV-10482", "value": 110, "items": [{ "product_id": "d07", "product_name": "Isla Linen Midi Dress (Tall)", "size": "12", "price": 110 }] } },
+      { "metric": "Refunded Order", "datetime": "2026-07-29T10:20:00Z", "properties": { "order_id": "OV-10311", "value": 75, "items": [{ "product_id": "d06", "product_name": "Margot Ruched Mini", "size": "12" }], "return_reason": "Too short" } },
+      { "metric": "Placed Order", "datetime": "2026-07-20T21:15:00Z", "properties": { "order_id": "OV-10311", "value": 75, "items": [{ "product_id": "d06", "product_name": "Margot Ruched Mini", "size": "12", "price": 75 }] } },
+      { "metric": "Refunded Order", "datetime": "2026-05-12T09:02:00Z", "properties": { "order_id": "OV-09877", "value": 95, "items": [{ "product_id": "d01", "product_name": "Sienna Satin Mini Dress", "size": "12" }], "return_reason": "Too short" } },
+      { "metric": "Placed Order", "datetime": "2026-05-02T18:44:00Z", "properties": { "order_id": "OV-09877", "value": 95, "items": [{ "product_id": "d01", "product_name": "Sienna Satin Mini Dress", "size": "12", "price": 95 }] } },
+      { "metric": "Refunded Order", "datetime": "2026-03-09T14:30:00Z", "properties": { "order_id": "OV-09402", "value": 79, "items": [{ "product_id": "d11", "product_name": "Thea Slip Dress", "size": "12" }], "return_reason": "Too short" } },
+      { "metric": "Placed Order", "datetime": "2026-02-27T20:05:00Z", "properties": { "order_id": "OV-09402", "value": 79, "items": [{ "product_id": "d11", "product_name": "Thea Slip Dress", "size": "12", "price": 79 }] } }
+    ]
+  },
+  {
+    "id": "charlotte",
+    "label": "Loyal high spender",
+    "profile": {
+      "first_name": "Charlotte",
+      "email": "charlotte.h@example.com",
+      "location": { "city": "London", "country": "GB" },
+      "properties": {
+        "usual_size": "10",
+        "customer_since": "2021-09-02",
+        "loyalty_tier": "Gold",
+        "lifetime_value": 3420,
+        "average_order_value": 255,
+        "personalisation_consent": true
+      }
+    },
+    "events": [
+      { "metric": "Clicked Email", "datetime": "2026-10-28T07:58:00Z", "properties": { "campaign": "New In: Occasion", "clicked_product_id": "d05", "clicked_product_name": "Aurelia Silk Bias Midi" } },
+      { "metric": "Opened Email", "datetime": "2026-10-28T07:55:00Z", "properties": { "campaign": "New In: Occasion" } },
+      { "metric": "Viewed Product", "datetime": "2026-10-28T08:01:00Z", "properties": { "product_id": "d05", "product_name": "Aurelia Silk Bias Midi" } },
+      { "metric": "Viewed Product", "datetime": "2026-10-28T08:04:00Z", "properties": { "product_id": "d08", "product_name": "Delphine One-Shoulder Maxi" } },
+      { "metric": "Placed Order", "datetime": "2026-09-12T13:20:00Z", "properties": { "order_id": "OV-10620", "value": 145, "items": [{ "product_id": "s02", "product_name": "Vera Slingback", "size": "5", "price": 145, "new_arrival": true }] } },
+      { "metric": "Clicked Email", "datetime": "2026-09-10T08:10:00Z", "properties": { "campaign": "New Season Shoes", "clicked_product_id": "s02", "clicked_product_name": "Vera Slingback" } },
+      { "metric": "Placed Order", "datetime": "2026-06-01T19:30:00Z", "properties": { "order_id": "OV-10104", "value": 375, "items": [{ "product_id": "o01", "product_name": "Elsie Cropped Tailored Jacket", "size": "10", "price": 165, "new_arrival": true }, { "product_id": "t05", "product_name": "Bella Silk Shirt", "size": "10", "price": 210, "new_arrival": true }] } },
+      { "metric": "Placed Order", "datetime": "2026-03-15T11:00:00Z", "properties": { "order_id": "OV-09511", "value": 245, "items": [{ "product_id": "j02", "product_name": "Remy Satin Jumpsuit", "size": "10", "price": 245, "new_arrival": true }] } }
+    ]
+  },
+  {
+    "id": "jess",
+    "label": "Lapsed, sale-only buyer",
+    "profile": {
+      "first_name": "Jess",
+      "email": "jess.m@example.com",
+      "location": { "city": "Bristol", "country": "GB" },
+      "properties": {
+        "usual_size": "14",
+        "customer_since": "2024-06-20",
+        "personalisation_consent": true
+      }
+    },
+    "events": [
+      { "metric": "Viewed Product", "datetime": "2026-10-25T21:10:00Z", "properties": { "product_id": "d04", "product_name": "Esme Wrap Midi Dress", "on_sale": true } },
+      { "metric": "Opened Email", "datetime": "2026-10-01T18:00:00Z", "properties": { "campaign": "New Season Occasionwear" } },
+      { "metric": "Clicked Email", "datetime": "2026-07-02T12:31:00Z", "properties": { "campaign": "Summer Sale: up to 50% off", "clicked_product_id": "d10", "clicked_product_name": "Rosa Puff-Sleeve Midi" } },
+      { "metric": "Opened Email", "datetime": "2026-07-02T12:30:00Z", "properties": { "campaign": "Summer Sale: up to 50% off" } },
+      { "metric": "Placed Order", "datetime": "2026-01-28T20:40:00Z", "properties": { "order_id": "OV-09210", "value": 49, "items": [{ "product_id": "d09", "product_name": "Poppy Floral Tea Dress", "size": "14", "price": 49, "full_price": 85, "on_sale": true }] } },
+      { "metric": "Placed Order", "datetime": "2025-07-10T09:15:00Z", "properties": { "order_id": "OV-07733", "value": 45, "items": [{ "product_id": "j03", "product_name": "Kit Linen Jumpsuit", "size": "14", "price": 45, "full_price": 79, "on_sale": true }] } },
+      { "metric": "Placed Order", "datetime": "2024-12-27T10:02:00Z", "properties": { "order_id": "OV-05120", "value": 29, "items": [{ "product_id": "o04", "product_name": "Lark Knit Cardigan", "size": "14", "price": 29, "full_price": 55, "on_sale": true }] } }
+    ]
+  }
+]
